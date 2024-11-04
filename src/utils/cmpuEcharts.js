@@ -1,68 +1,50 @@
-function formatDimensionValue(dimension, value) {
-    if (dimension.toLowerCase().includes('year')) {
-        return value.toString();
-    }
-    if (dimension.toLowerCase().includes('month')) {
-        if (typeof value === 'string' && /^\d{4}-\d{2}$/.test(value)) {
-            return value;
-        } else if (!isNaN(value)) {
-            return value.toString().padStart(2, '0');
-        }
-    }
-    return value;
+function isTimeDimension(field) {
+    const timeKeywords = ['date', 'year', 'month']
+    const fieldLower = field.dataeaseName.toLowerCase()
+    return timeKeywords.some(keyword => fieldLower.includes(keyword))
 }
 
 function determineChartType(rawData) {
-    let dimensions = rawData.fields.filter(field => field.groupType === 'd');
-    let metrics = rawData.fields.filter(field => field.groupType === 'q');
+    let dimensions = rawData.fields.filter(field => field.groupType === 'd')
+    let metrics = rawData.fields.filter(field => field.groupType === 'q')
 
-    if (dimensions.length === 1) {
-        let dimensionType = dimensions[0].type;
-        if (['DATE', 'YEAR'].includes(dimensionType) || (dimensionType === 'VARCHAR' && (dimensions[0].dataeaseName.toLowerCase().includes('year') || dimensions[0].dataeaseName.toLowerCase().includes('month')))) {
-            return 'line';
-        }
-        if (dimensionType === 'VARCHAR') {
-            return 'bar';
-        }
+    if (dimensions.length === 1 && isTimeDimension(dimensions[0])) {
+        return dimensions[0].type === 'VARCHAR' ? 'bar' : 'line'
     }
 
-    if (dimensions.length > 1) {
-        let allTimeDimensions = dimensions.every(dim => ['DATE', 'YEAR'].includes(dim.type) || (dim.type === 'VARCHAR' && (dim.dataeaseName.toLowerCase().includes('year') || dim.dataeaseName.toLowerCase().includes('month'))));
-        if (allTimeDimensions) {
-            return 'line';
-        }
-        return 'table';
+    if (dimensions.every(dim => isTimeDimension(dim))) {
+        return 'line'
     }
 
-    return 'table';
+    return 'table'
 }
 
 export function renderChart(rawData) {
-    // d-维度 q-指标
-    let chartType = determineChartType(rawData)
+    const fields = rawData.fields.reduce((acc, field) => {
+        const key = field.groupType === 'd' ? 'nameFields' : 'valueFields'
+        const keyNames = field.groupType === 'd' ? 'nameFieldNames' : 'valueFieldNames'
+        
+        if (!acc[key]) acc[key] = []
+        if (!acc[keyNames]) acc[keyNames] = []
+        
+        acc[key].push({
+            value: field.dataeaseName,
+            label: field.name,
+            type: field.type
+        });
+        acc[keyNames].push(field.dataeaseName)
+        return acc
+    }, {})
 
-    const nameFieldNames = rawData.fields.filter(field => field.groupType === 'd').map(field => field.dataeaseName)
-    const nameFields = rawData.fields.filter(field => field.groupType === 'd').map(field => ({
-        value:field.dataeaseName,
-        label: field.name,
-        type: field.type
-    }))
-
-    const valueFieldNames = rawData.fields.filter(field => field.groupType === 'q').map(field => field.dataeaseName)
-    const valueFields = rawData.fields.filter(field => field.groupType === 'q').map(field => ({
-        value:field.dataeaseName,
-        label: field.name,
-        type: field.type
-    }))
-
-    const data = {
-        fields:{
-            nameFields,valueFields
+    return {
+        fields: {
+            nameFields: fields.nameFields || [],
+            valueFields: fields.valueFields || [],
         },
-        fieldNames:{
-            nameFieldNames,valueFieldNames
+        fieldNames: {
+            nameFieldNames: fields.nameFieldNames || [],
+            valueFieldNames: fields.valueFieldNames || [],
         },
-        chartType
+        chartType: determineChartType(rawData)
     }
-    return data
 }
