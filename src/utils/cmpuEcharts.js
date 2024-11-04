@@ -31,28 +31,37 @@ function determineChartType(rawData) {
         if (allTimeDimensions) {
             return 'line';
         }
-        return 'parallel';
+        return 'table';
     }
 
     return 'table';
 }
 
 export function renderChart(rawData) {
+    // d-维度 q-指标
     let chartType = determineChartType(rawData)
-    let dFieldID = rawData.fields.filter(field => field.groupType === 'd').map(field => field.dataeaseName)
-    let dField = rawData.fields.filter(field => field.groupType === 'd').map(field => field.name)
-    let qField = rawData.fields.filter(field => field.groupType === 'q').map(field => field.name)
-    let xAxisData = []
 
-    dFieldID.forEach(item => {
-        xAxisData.push(rawData.data.map(_item => formatDimensionValue(item, _item[item])));
-    })
+    const nameFieldNames = rawData.fields.filter(field => field.groupType === 'd').map(field => field.dataeaseName)
+    const nameFields = rawData.fields.filter(field => field.groupType === 'd').map(field => ({
+        value:field.dataeaseName,
+        label: field.name,
+        type: field.type
+    }))
+
+    const valueFieldNames = rawData.fields.filter(field => field.groupType === 'q').map(field => field.dataeaseName)
+    const valueFields = rawData.fields.filter(field => field.groupType === 'q').map(field => ({
+        value:field.dataeaseName,
+        label: field.name,
+        type: field.type
+    }))
 
     const data = {
-        field:{
-            dField,qField
+        fields:{
+            nameFields,valueFields
         },
-        xAxisData,
+        fieldNames:{
+            nameFieldNames,valueFieldNames
+        },
         chartType
     }
     return data
