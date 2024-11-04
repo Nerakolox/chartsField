@@ -1112,7 +1112,7 @@ export default{
     this.qSelection=this.returnData.fields.valueFields
     this.dSelected=this.returnData.fieldNames.nameFieldNames[0]
     this.qSelected=this.returnData.fieldNames.valueFieldNames
-    this.myChart = echarts.init(document.getElementById('chart'))
+    this.myChart = echarts.init(document.getElementById('chart'), 'dark')
     this.drawChart()
   },
   methods:{
@@ -1135,44 +1135,82 @@ export default{
           emphasis: {
               focus: 'series'
           },
-          data: chartsDatas.map(item=>item.value[index])
+          data: chartsDatas.map(item=>item.value[index]),
         })
       })
 
       this.showData=series
       let option = {
+        backgroundColor:'transparent',
         tooltip: {
           show:true,
-            trigger: 'axis',
-            axisPointer: { type: 'shadow' }
+          trigger: 'axis',
+          backgroundColor: 'rgba(50, 50, 50, 0.8)',
+          borderColor: '#333',
+          borderWidth: 1,
+          textStyle: {
+            color: '#fff',
+            fontSize: 14
+          },
+          axisPointer: {
+            type: 'shadow',
+            shadowStyle: {
+                color: 'rgba(150, 150, 150, 0.3)'
+            }
+          }
         },
         xAxis: {
             type: 'category',
             data: chartsDatas.map(item=>item.name),
             axisLine: {
-                lineStyle: {
-                    color: '#d3d3d3'
-                }
+              lineStyle: { 
+                color: '#d3d3d3'
+              }
             },
             axisLabel: {
-                color: '#d3d3d3'
+              color: '#d3d3d3'
             }
         },
         yAxis: {
             type: 'value',
             nameGap: 30,
             axisLine: {
-                lineStyle: { color: '#d3d3d3' }
+                lineStyle: { 
+                  color: '#d3d3d3'
+                }
             },
             axisLabel: {
-                color: '#d3d3d3',
-                rotate: -45,
+              color: '#d3d3d3',
+              rotate: -45,
             },
             axisTick: {
-                lineStyle: { color: '#d3d3d3' }
+              lineStyle: { 
+                color: '#d3d3d3'
+              }
             }
         },
         series: series,
+        dataZoom:[
+          {
+            type: 'slider',
+            show: true,
+            xAxisIndex: [0],
+          },
+          {
+            type: 'slider',
+            show: true,
+            yAxisIndex: [0],
+            left: '93%',
+          },
+          {
+            type: 'inside',
+            xAxisIndex: [0],
+          },
+          {
+            type: 'inside',
+            yAxisIndex: [0],
+          }
+        ],
         grid: {
             top: '21%',
             bottom: '10%',
@@ -1180,7 +1218,7 @@ export default{
             left: '10%'
         }
       }
-
+      console.log(option)
       this.myChart.setOption(option,true)
     },
     changeSelected(){
@@ -1193,6 +1231,8 @@ export default{
 }
 </script>
 
-<style scoped>
-
+<style>
+body{
+  background:#1c1c1e;
+}
 </style>
